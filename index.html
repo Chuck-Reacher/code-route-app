@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Code de la Route</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0f1114">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1114;--surface:#181b20;--surface2:#20242b;--line:#2a2f38;--chalk:#f0f2f5;--dim:#8a919c;--accent:#0057b8;--red:#c1121f;--ok:#2e9e4a;--ink:#fff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--chalk);font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;}
+#app{max-width:560px;margin:0 auto;padding:22px 18px 60px;}
+h1{font-size:1.9rem;margin:0;font-weight:800}p{margin:0;line-height:1.5}.dim{color:var(--dim)}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.kicker{color:var(--accent);font-weight:700;font-size:.78rem;text-transform:uppercase;margin-bottom:4px}
+.icon-btn{background:var(--surface);border:1px solid var(--line);border-radius:8px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.back{color:var(--dim);background:none;border:none;font-weight:600;cursor:pointer;padding:0 0 16px;display:flex;gap:6px}
+.btn{width:100%;border:none;border-radius:10px;padding:15px;font-weight:700;font-size:1rem;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff}.btn-ghost{background:transparent;color:var(--chalk);border:1px solid var(--line)}
+.btn-row{display:flex;gap:10px;margin-top:16px}.btn-row .btn{width:auto;flex:1}
+.stats{display:flex;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:18px}
+.stats .b{flex:1;text-align:center}.stats .pts{font-size:1.6rem;font-weight:800;color:var(--accent)}.stats .sub{font-size:.68rem;color:var(--dim)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:center}
+.card .e{font-size:1.5rem}.card h3{margin:0 0 3px;font-size:1rem;font-weight:800}.card p{font-size:.8rem;color:var(--dim)}
+.section-title{font-size:.76rem;color:var(--dim);text-transform:uppercase;font-weight:700;margin:20px 0 10px}
+.qctx{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px;font-weight:600;text-align:center}
+.opt{display:block;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;color:var(--chalk);padding:15px;font-weight:700;cursor:pointer;margin-bottom:9px;text-align:center}
+.opt.correct{background:var(--ok);border-color:var(--ok);color:#fff}.opt.wrong{background:var(--red);border-color:var(--red);color:#fff}.opt.dim2{opacity:.35}
+.explain{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0;font-size:.88rem}
+.prog{font-size:.8rem;color:var(--dim);text-align:center;margin-bottom:12px}
+.lesson{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+.lesson h3{margin:0 0 8px;font-size:1rem}.lesson p{font-size:.9rem;color:var(--dim);line-height:1.6}
+.result{text-align:center;padding:30px 0}.result .big{font-size:2.6rem;font-weight:800;color:var(--accent)}
+.log{display:flex;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:7px;font-size:.85rem}
+.log .p{color:var(--accent);font-weight:800}.dayh{font-size:.74rem;color:var(--dim);text-transform:uppercase;font-weight:700;margin:14px 0 6px}
+</style></head><body><div id="app"></div>
+<script>
+/* ===== BANQUES ===== */
+const CODE_BANK=[
+{ctx:"À une intersection sans panneau ni marquage, qui est prioritaire ?",options:["Le véhicule venant de droite","Le véhicule le plus rapide","Le plus gros véhicule"],correct:"Le véhicule venant de droite",explain:"C'est la règle de la priorité à droite, qui s'applique par défaut en l'absence de signalisation."},
+{ctx:"Panneau triangulaire à bordure rouge : que signifie-t-il ?",options:["Danger, soyez attentif","Interdiction","Obligation"],correct:"Danger, soyez attentif",explain:"Les panneaux triangulaires annoncent un danger (virage, école, animaux...)."},
+{ctx:"Un panneau rond à fond bleu indique généralement...",options:["Une obligation","Une interdiction","Un danger"],correct:"Une obligation",explain:"Rond bleu = obligation (direction à suivre, piste cyclable...). Rond blanc à bordure rouge = interdiction."},
+{ctx:"Dans un rond-point, qui est prioritaire en général en France ?",options:["Les véhicules déjà engagés dans l'anneau","Les véhicules qui entrent","Cela dépend de la couleur des voitures"],correct:"Les véhicules déjà engagés dans l'anneau",explain:"Sauf panneau contraire, les véhicules dans l'anneau ont la priorité sur ceux qui souhaitent entrer."},
+{ctx:"Par temps de pluie, la distance de freinage par rapport au sec est...",options:["Doublée environ","Identique","Réduite"],correct:"Doublée environ",explain:"L'adhérence diminue fortement sur route mouillée, la distance de freinage peut doubler."},
+{ctx:"Quelle est la limite de vitesse par défaut en ville en France ?",options:["50 km/h","30 km/h","70 km/h"],correct:"50 km/h",explain:"50 km/h en agglomération sauf signalisation différente (30 km/h dans de nombreuses zones résidentielles)."},
+{ctx:"Le taux d'alcoolémie maximal autorisé pour un conducteur (permis non probatoire) est de...",options:["0,5 g/L de sang","0,2 g/L de sang","0,8 g/L de sang"],correct:"0,5 g/L de sang",explain:"0,5 g/L (0,2 g/L pour les jeunes conducteurs en période probatoire)."},
+{ctx:"Un feu orange clignotant signifie...",options:["Passage à autorisé mais prudence","Arrêt obligatoire","Priorité absolue"],correct:"Passage à autorisé mais prudence",explain:"Il invite à ralentir et à redoubler de prudence, contrairement au rouge fixe qui impose l'arrêt."},
+{ctx:"La distance de sécurité minimale avec le véhicule qui précède correspond à...",options:["2 secondes de trajet","2 mètres fixes","La longueur d'une voiture"],correct:"2 secondes de trajet",explain:"La règle des 2 secondes s'adapte automatiquement à la vitesse, contrairement à une distance fixe en mètres."},
+{ctx:"Sur autoroute, la vitesse maximale autorisée par temps sec est de...",options:["130 km/h","110 km/h","150 km/h"],correct:"130 km/h",explain:"130 km/h par temps sec (110 km/h par temps de pluie)."},
+{ctx:"Un panneau STOP impose de...",options:["S'arrêter complètement, même si la voie est libre","Ralentir seulement","S'arrêter seulement si un véhicule arrive"],correct:"S'arrêter complètement, même si la voie est libre",explain:"L'arrêt est obligatoire, contrairement au cédez-le-passage qui n'impose l'arrêt que si nécessaire."},
+{ctx:"L'utilisation du téléphone tenu en main au volant est...",options:["Interdite dans tous les cas","Autorisée à l'arrêt à un feu rouge","Autorisée en ville uniquement"],correct:"Interdite dans tous les cas",explain:"Interdit même à l'arrêt tant que le moteur tourne, sauf véhicule totalement stationné hors circulation."},
+{ctx:"Pour doubler un cycliste, la distance latérale minimale à respecter est de...",options:["1 mètre en ville, 1,5 m hors agglomération","50 cm partout","Aucune distance minimale légale"],correct:"1 mètre en ville, 1,5 m hors agglomération",explain:"Ces distances minimales sont fixées par le code de la route pour protéger les cyclistes."},
+{ctx:"Que faire face à un passage piéton où une personne s'apprête à traverser ?",options:["S'arrêter pour la laisser passer","Klaxonner pour la prévenir","Accélérer pour passer avant elle"],correct:"S'arrêter pour la laisser passer",explain:"Le conducteur doit céder le passage à tout piéton qui s'engage ou manifeste l'intention de le faire."},
+{ctx:"La ceinture de sécurité est obligatoire...",options:["Pour tous les occupants, à toutes les places équipées","Seulement à l'avant","Seulement hors agglomération"],correct:"Pour tous les occupants, à toutes les places équipées",explain:"Obligatoire à toutes les places équipées d'une ceinture, avant comme arrière."},
+{ctx:"Un marquage au sol en ligne blanche continue signifie...",options:["Franchissement interdit","Dépassement autorisé","Stationnement autorisé"],correct:"Franchissement interdit",explain:"La ligne continue interdit le franchissement, contrairement à la ligne discontinue."},
+{ctx:"En cas d'accident, le triangle de signalisation doit être placé à environ...",options:["30 mètres du véhicule","5 mètres du véhicule","100 mètres du véhicule"],correct:"30 mètres du véhicule",explain:"Environ 30 mètres en amont pour prévenir les autres usagers à temps."},
+{ctx:"Un gilet de sécurité doit être enfilé...",options:["Avant de sortir du véhicule en cas d'urgence","Uniquement la nuit","Uniquement sur autoroute"],correct:"Avant de sortir du véhicule en cas d'urgence",explain:"Il doit être mis avant de sortir du véhicule, pour être visible dès qu'on est à l'extérieur."},
+{ctx:"Le panneau rond blanc à bordure rouge avec une voiture noire signifie...",options:["Interdiction de circuler pour tous les véhicules à moteur","Stationnement interdit","Priorité aux véhicules"],correct:"Interdiction de circuler pour tous les véhicules à moteur",explain:"C'est un panneau d'interdiction d'accès aux véhicules à moteur."},
+{ctx:"Sur une route à double sens sans marquage, on circule...",options:["Le plus à droite possible","Au centre de la route","Le plus à gauche possible"],correct:"Le plus à droite possible",explain:"Règle de base pour laisser la place aux véhicules venant en sens inverse."},
+{ctx:"Que signifie un feu tricolore avec une flèche verte seule allumée ?",options:["On peut avancer uniquement dans la direction de la flèche","On peut aller partout","Il faut s'arrêter"],correct:"On peut avancer uniquement dans la direction de la flèche",explain:"La flèche verte autorise le mouvement uniquement dans le sens qu'elle indique."},
+{ctx:"Le port du casque est obligatoire pour...",options:["Tout conducteur et passager de deux-roues motorisé","Seulement le conducteur","Seulement au-dessus de 50 km/h"],correct:"Tout conducteur et passager de deux-roues motorisé",explain:"Obligatoire pour tous les occupants d'un deux-roues motorisé, quelle que soit la vitesse."},
+{ctx:"Un panneau carré à fond bleu (hors obligation directionnelle) indique en général...",options:["Une indication utile (parking, hôpital...)","Un danger","Une interdiction"],correct:"Une indication utile (parking, hôpital...)",explain:"Les panneaux carrés/rectangulaires bleus donnent des indications pratiques, pas des ordres."},
+{ctx:"En cas de brouillard réduisant la visibilité à moins de 50 m, il faut allumer...",options:["Les feux de brouillard avant (et arrière si besoin)","Les feux de route (pleins phares)","Rien de spécial"],correct:"Les feux de brouillard avant (et arrière si besoin)",explain:"Les feux de route éblouissent dans le brouillard ; les feux de brouillard sont conçus pour cette situation."},
+{ctx:"Sur une route à double sens, on ne double que si...",options:["La visibilité est suffisante et la voie d'en face est libre","Le véhicule devant roule lentement","On est pressé"],correct:"La visibilité est suffisante et la voie d'en face est libre",explain:"Le dépassement impose une visibilité dégagée et l'absence de danger, notamment de véhicule en face."},
+{ctx:"Le dépassement est interdit...",options:["Dans les virages et sommets de côte à visibilité réduite","Sur autoroute","La nuit uniquement"],correct:"Dans les virages et sommets de côte à visibilité réduite",explain:"Ligne continue, virage ou sommet de côte : la visibilité insuffisante rend le dépassement dangereux et interdit."},
+{ctx:"Sur autoroute, la bande d'arrêt d'urgence est réservée...",options:["Aux arrêts d'urgence et véhicules de secours","À la circulation en cas d'embouteillage","Au covoiturage"],correct:"Aux arrêts d'urgence et véhicules de secours",explain:"Y circuler ou s'y arrêter sans urgence réelle est interdit et dangereux."},
+{ctx:"Le \"corridor de sécurité\" en cas d'embouteillage sur autoroute consiste à...",options:["Laisser un passage entre les deux files de gauche pour les secours","Serrer à droite au maximum","Rouler sur la bande d'arrêt d'urgence"],correct:"Laisser un passage entre les deux files de gauche pour les secours",explain:"Obligatoire dès l'immobilisation : les véhicules de la voie de gauche serrent à gauche, les autres à droite."},
+{ctx:"Se garer à moins de 5 mètres d'un passage piéton est...",options:["Interdit","Autorisé si la place est libre","Autorisé la nuit seulement"],correct:"Interdit",explain:"Cela masquerait la visibilité des piétons qui s'apprêtent à traverser."},
+{ctx:"En cas d'accident, l'ordre correct des premiers gestes est...",options:["Protéger, alerter, secourir","Secourir, protéger, alerter","Alerter, secourir, protéger"],correct:"Protéger, alerter, secourir",explain:"On sécurise d'abord la zone (éviter le sur-accident), puis on alerte les secours, puis on porte assistance si on est formé."},
+{ctx:"Le numéro d'urgence européen valable dans toute l'UE est le...",options:["112","17","0800"],correct:"112",explain:"Le 112 fonctionne dans tous les pays de l'Union européenne, y compris avec un téléphone verrouillé."},
+{ctx:"L'éco-conduite recommande notamment de...",options:["Anticiper et éviter les accélérations/freinages brusques","Rouler toujours en 2e vitesse","Couper le moteur à chaque arrêt même bref en roulant"],correct:"Anticiper et éviter les accélérations/freinages brusques",explain:"Une conduite souple et anticipée réduit la consommation de carburant et l'usure du véhicule."},
+{ctx:"Le permis probatoire (jeune conducteur) comporte...",options:["6 points au départ, portés à 12 progressivement","12 points dès le départ","3 points seulement"],correct:"6 points au départ, portés à 12 progressivement",explain:"6 points au départ, +2 chaque année sans infraction (ou +3 après formation complémentaire), jusqu'à 12."},
+{ctx:"Un excès de vitesse de plus de 40 km/h peut entraîner...",options:["Une rétention immédiate du permis","Un simple avertissement","Aucune sanction si c'est la première fois"],correct:"Une rétention immédiate du permis",explain:"Les grands excès de vitesse sont sanctionnés lourdement : amende, retrait de points, rétention voire suspension du permis."},
+{ctx:"Le panneau carré blanc/bleu avec un \"P\" barré signifie...",options:["Stationnement interdit","Priorité au stationnement","Parking gratuit"],correct:"Stationnement interdit",explain:"Le symbole barré indique une interdiction, ici celle de stationner."},
+{ctx:"Face à un véhicule prioritaire (pompiers, police, gyrophare et sirène), il faut...",options:["Faciliter son passage en se rangeant si besoin","L'ignorer si on est déjà engagé","Accélérer pour dégager la route plus vite qu'eux"],correct:"Faciliter son passage en se rangeant si besoin",explain:"On doit céder le passage aux véhicules prioritaires en intervention, même au prix d'un léger écart au code."},
+];
+const MANUEL_BANK=[
+{ctx:"À quel moment doit-on appuyer sur la pédale d'embrayage ?",options:["Avant de changer de vitesse ou de s'arrêter","Uniquement pour démarrer","Jamais en roulant"],correct:"Avant de changer de vitesse ou de s'arrêter",explain:"L'embrayage désolidarise le moteur de la boîte, indispensable pour passer une vitesse ou freiner jusqu'à l'arrêt."},
+{ctx:"Le \"point de patinage\" (ou point d'accroche) correspond à...",options:["Le point où l'embrayage commence à transmettre le mouvement","Le point mort","La vitesse maximale du moteur"],correct:"Le point où l'embrayage commence à transmettre le mouvement",explain:"C'est le moment clé pour démarrer en douceur sans caler ni faire hurler le moteur."},
+{ctx:"Pour démarrer en côte sans frein à main (technique classique), on utilise...",options:["Le point de patinage + accélérateur progressif","Le frein uniquement","La marche arrière"],correct:"Le point de patinage + accélérateur progressif",explain:"On trouve le point de patinage puis on relâche le frein en accélérant légèrement pour ne pas reculer."},
+{ctx:"Pourquoi rétrograder (passer une vitesse inférieure) avant un virage serré ?",options:["Pour garder de la puissance moteur disponible à la sortie du virage","Pour économiser du carburant uniquement","Ce n'est jamais nécessaire"],correct:"Pour garder de la puissance moteur disponible à la sortie du virage",explain:"Rétrograder permet d'avoir le régime moteur adapté pour ré-accélérer efficacement en sortie de virage."},
+{ctx:"Un régime moteur qui monte très haut avec un bruit aigu signale généralement...",options:["Qu'il faut passer une vitesse supérieure","Qu'il faut rétrograder","Que tout est normal"],correct:"Qu'il faut passer une vitesse supérieure",explain:"Un régime trop élevé use le moteur inutilement ; il faut passer un rapport supérieur."},
+{ctx:"À l'arrêt prolongé (feu rouge long), que fait-on en général au point mort ?",options:["On relâche l'embrayage et on reste au point mort","On garde l'embrayage enfoncé en permanence","On coupe le moteur systématiquement"],correct:"On relâche l'embrayage et on reste au point mort",explain:"Garder l'embrayage enfoncé longtemps fatigue inutilement la jambe et la mécanique."},
+{ctx:"Le fait de rouler avec le pied posé sur l'embrayage sans le débrayer est...",options:["Une mauvaise habitude qui use l'embrayage prématurément","Sans conséquence","Recommandé pour plus de contrôle"],correct:"Une mauvaise habitude qui use l'embrayage prématurément",explain:"Cela crée une usure inutile du disque d'embrayage, même sans débrayer complètement."},
+{ctx:"Pour se garer en pente avec une boîte manuelle, en plus du frein à main, on...",options:["Laisse une vitesse enclenchée (1re en montée, marche arrière en descente)","Laisse le levier au point mort","Coupe simplement le moteur, rien d'autre"],correct:"Laisse une vitesse enclenchée (1re en montée, marche arrière en descente)",explain:"Cela bloque mécaniquement les roues via la transmission, en sécurité supplémentaire au frein à main."},
+{ctx:"Caler (le moteur s'arrête brutalement) arrive le plus souvent quand...",options:["On relâche l'embrayage trop vite sans assez d'accélérateur","On accélère trop fort en 5e vitesse","On roule sur autoroute"],correct:"On relâche l'embrayage trop vite sans assez d'accélérateur",explain:"Un relâchement trop brusque de l'embrayage sans régime moteur suffisant coupe le moteur."},
+{ctx:"Sur autoroute à vitesse stabilisée, on privilégie...",options:["Le rapport le plus élevé possible sans forcer le moteur","La 2e vitesse pour plus de réactivité","Rouler au point mort pour économiser du carburant"],correct:"Le rapport le plus élevé possible sans forcer le moteur",explain:"Un rapport élevé à vitesse stable réduit la consommation et l'usure moteur."},
+{ctx:"Rouler au point mort en descente (roue libre) est...",options:["Dangereux et déconseillé","Une bonne technique d'économie","Obligatoire dans les descentes longues"],correct:"Dangereux et déconseillé",explain:"On perd le frein moteur et une part de contrôle du véhicule, surtout dans les descentes."},
+{ctx:"Le frein moteur consiste à...",options:["Ralentir en rétrogradant sans utiliser la pédale de frein","Toujours utiliser le frein à main","Accélérer en descente"],correct:"Ralentir en rétrogradant sans utiliser la pédale de frein",explain:"Utile en descente pour ménager les freins, en rétrogradant progressivement."},
+{ctx:"Avant de démarrer le moteur d'une boîte manuelle, il faut...",options:["Vérifier que le levier est au point mort (ou débrayer)","Enclencher la 1re vitesse","Appuyer sur l'accélérateur"],correct:"Vérifier que le levier est au point mort (ou débrayer)",explain:"Démarrer une vitesse enclenchée sans débrayer ferait bondir le véhicule brutalement."},
+{ctx:"Pour ralentir progressivement en descente longue, la technique recommandée est...",options:["Le frein moteur (rétrograder) combiné au frein","Le point mort en roue libre","Rester en 5e vitesse tout du long"],correct:"Le frein moteur (rétrograder) combiné au frein",explain:"Cela évite la surchauffe des freins sur une longue descente en répartissant le ralentissement."},
+{ctx:"Un embrayage qui \"patine\" en permanence (odeur de brûlé, perte de puissance) signale...",options:["Une usure ou un mauvais réglage à faire vérifier","Un fonctionnement normal","Qu'il faut rouler plus vite"],correct:"Une usure ou un mauvais réglage à faire vérifier",explain:"Un patinage anormal en dehors du démarrage indique un disque d'embrayage usé ou mal réglé."},
+];
+
+const LESSONS=[
+{title:"La priorité à droite",body:"Règle par défaut en l'absence de panneau : le véhicule venant de la droite est prioritaire. Elle s'applique surtout en agglomération, sur les petites routes ou parkings sans signalisation. Un panneau (STOP, cédez le passage, ou route prioritaire) annule cette règle."},
+{title:"Distances de sécurité et de freinage",body:"La distance de sécurité (règle des 2 secondes) évite les collisions en chaîne. La distance de freinage dépend de la vitesse (elle est multipliée par 4 si la vitesse double), de l'état de la route et des pneus. Par temps de pluie, comptez environ le double de distance de freinage."},
+{title:"Les catégories de panneaux",body:"Triangle à bordure rouge : danger. Rond blanc à bordure rouge : interdiction. Rond bleu (sans bordure rouge) : obligation. Carré ou rectangle bleu : indication. Panneau rouge et blanc en losange ou octogone (STOP) : arrêt obligatoire à une intersection."},
+{title:"L'embrayage et le point de patinage",body:"L'embrayage relie ou coupe la transmission entre le moteur et les roues. Le \"point de patinage\" est la zone où, en relâchant doucement la pédale, le véhicule commence à avancer sans à-coup. Le maîtriser est la clé pour démarrer en douceur, y compris en côte."},
+{title:"Changer de vitesse au bon moment",body:"On monte les rapports quand le régime moteur devient élevé (bruit qui monte), on rétrograde avant un virage, une côte ou pour ralentir en gardant du contrôle. Rouler avec un rapport trop élevé à basse vitesse fait \"peiner\" le moteur ; trop bas, il tourne inutilement vite."},
+{title:"Se garer et démarrer en côte",body:"En stationnement en pente : frein à main serré + une vitesse enclenchée (1ère si montée, marche arrière si descente), roues tournées vers le trottoir en montée, à l'opposé en descente. Pour démarrer en côte : trouver le point de patinage, accélérer légèrement en relâchant le frein pour ne pas reculer."},
+{title:"Dépassement et croisement",body:"Le dépassement exige une visibilité suffisante, une voie libre et l'absence d'interdiction (ligne continue, virage, sommet de côte). On se rabat après avoir vérifié dans le rétroviseur que la manœuvre est terminée en toute sécurité. Le croisement se fait en serrant à droite, en réduisant l'allure si la voie est étroite."},
+{title:"En cas d'accident : protéger, alerter, secourir",body:"1) Protéger : allumer les feux de détresse, poser le triangle à ~30 m, enfiler le gilet avant de sortir. 2) Alerter : appeler le 112 ou le 17/15/18 en donnant lieu et nature de l'accident. 3) Secourir : seulement si on est formé aux premiers secours, sans déplacer un blessé sauf danger immédiat (incendie...)."},
+{title:"Le permis à points",body:"Le permis probatoire démarre avec 6 points (12 pour un permis obtenu via conduite accompagnée), et monte progressivement à 12 sans infraction. Un excès de vitesse important, l'alcool ou le téléphone au volant peuvent coûter plusieurs points d'un coup, voire entraîner une suspension immédiate du permis."},
+];
+
+/* ===== STATE / STORAGE ===== */
+let profile=null,view='home',quiz=null;
+const LK='code-route-profile';
+function defProfile(){return{points:0,streak:0,longest:0,log:[],lastDate:null};}
+async function loadP(){
+  if(window.storage){try{const r=await window.storage.get('profile',false);if(r&&r.value)return{...defProfile(),...JSON.parse(r.value)};return defProfile();}catch(e){}}
+  try{const raw=localStorage.getItem(LK);if(raw)return{...defProfile(),...JSON.parse(raw)};}catch(e){}
+  return defProfile();
+}
+async function saveP(p){if(window.storage){try{await window.storage.set('profile',JSON.stringify(p),false);return;}catch(e){}}try{localStorage.setItem(LK,JSON.stringify(p));}catch(e){}}
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function daysBetween(a,b){const[ay,am,ad]=a.split('-').map(Number),[by,bm,bd]=b.split('-').map(Number);return Math.round((new Date(by,bm-1,bd)-new Date(ay,am-1,ad))/86400000);}
+function record(title,correct,total){
+  const pts=correct*10+Math.round((correct/total)*20),t=today();
+  if(profile.lastDate!==t){if(profile.lastDate&&daysBetween(profile.lastDate,t)===1)profile.streak=(profile.streak||0)+1;else profile.streak=1;profile.lastDate=t;profile.longest=Math.max(profile.longest||0,profile.streak);}
+  profile.points=(profile.points||0)+pts;profile.log.push({date:t,label:`${title} — ${correct}/${total}`,points:pts});saveP(profile);return pts;
+}
+function shuffle(a,n){const c=a.slice();for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]];}return c.slice(0,Math.min(n,c.length));}
+function esc(s){return String(s).replace(/'/g,"\\'");}
+function css(s){return s.replace(/[^a-zA-Z0-9]/g,'');}
+
+/* ===== NAV ===== */
+function goHome(){view='home';renderHome();}
+function goHistory(){view='hist';renderHist();}
+function goLessons(){view='lessons';renderLessons();}
+function startQuiz(bank,title){
+  quiz={title,questions:shuffle(bank,10).map(q=>({ctx:q.ctx,options:q.options,correct:q.correct,explain:q.explain})),index:0,correct:0,answered:false};
+  view='quiz';renderQuiz();
+}
+
+function renderHome(){
+  document.getElementById('app').innerHTML=`
+  <div class="header"><div><div class="kicker">Révision permis</div><h1>Code de la Route</h1></div>
+  <button class="icon-btn" onclick="goHistory()">📊</button></div>
+  <div class="stats"><div class="b"><div class="pts">🔥 ${profile.streak||0}</div><div class="sub">jours de suite</div></div>
+  <div class="b"><div class="pts">${profile.points||0}</div><div class="sub">points</div></div></div>
+  <div class="section-title" style="margin-top:0">Entraînement</div>
+  <div class="card" onclick="startQuiz(CODE_BANK,'Code de la route')"><div class="e">🚦</div><div><h3>Quiz Code de la route</h3><p>Panneaux, priorités, distances, règles générales</p></div></div>
+  <div class="card" onclick="startQuiz(MANUEL_BANK,'Conduite manuelle')"><div class="e">🎛️</div><div><h3>Quiz Conduite manuelle</h3><p>Embrayage, rapports, démarrage en côte...</p></div></div>
+  <div class="card" onclick="goLessons()"><div class="e">📘</div><div><h3>Cours</h3><p>Explications détaillées par thème</p></div></div>`;
+}
+function renderQuiz(){
+  const q=quiz.questions[quiz.index];
+  document.getElementById('app').innerHTML=`
+  <button class="back" onclick="goHome()">‹ Quitter</button><h1 style="font-size:1.4rem">${quiz.title}</h1>
+  <div class="prog">Question ${quiz.index+1}/${quiz.questions.length} · ${quiz.correct} correcte(s)</div>
+  <div class="qctx">${q.ctx}</div>
+  <div id="opts">${q.options.map(o=>`<button class="opt" id="o-${css(o)}" onclick="answer('${esc(o)}')">${o}</button>`).join('')}</div>
+  <div id="ex"></div>`;
+}
+function answer(sel){
+  if(quiz.answered)return;quiz.answered=true;
+  const q=quiz.questions[quiz.index],ok=sel===q.correct;if(ok)quiz.correct++;
+  q.options.forEach(o=>{const el=document.getElementById('o-'+css(o));if(!el)return;el.onclick=null;
+    if(o===q.correct)el.classList.add('correct');else if(o===sel)el.classList.add('wrong');else el.classList.add('dim2');});
+  document.getElementById('ex').innerHTML=`<div class="explain"><b>${ok?'Bien joué !':'Pas tout à fait.'}</b><br>${q.explain}</div>
+  <button class="btn btn-primary" onclick="nextQ()">${quiz.index+1<quiz.questions.length?'Suivant':'Résultat'}</button>`;
+}
+function nextQ(){quiz.index++;quiz.answered=false;if(quiz.index>=quiz.questions.length){finish();return;}renderQuiz();}
+function finish(){
+  const pts=record(quiz.title,quiz.correct,quiz.questions.length);
+  document.getElementById('app').innerHTML=`<div class="result"><h1>Session terminée</h1><p class="dim">${quiz.title}</p>
+  <div class="big">${quiz.correct}/${quiz.questions.length}</div><p class="dim">+${pts} points</p>
+  <div class="btn-row" style="max-width:300px;margin:16px auto 0"><button class="btn btn-ghost" onclick="goHome()">Accueil</button>
+  <button class="btn btn-primary" onclick="startQuiz(${quiz.title==='Code de la route'?'CODE_BANK':'MANUEL_BANK'},'${quiz.title}')">Rejouer</button></div></div>`;
+}
+function renderLessons(){
+  document.getElementById('app').innerHTML=`<button class="back" onclick="goHome()">‹ Retour</button>
+  <div class="header"><div><div class="kicker">Théorie</div><h1>Cours</h1></div></div>
+  ${LESSONS.map(l=>`<div class="lesson"><h3>${l.title}</h3><p>${l.body}</p></div>`).join('')}`;
+}
+function renderHist(){
+  const byDate={};(profile.log||[]).slice().reverse().forEach(l=>{(byDate[l.date]=byDate[l.date]||[]).push(l);});
+  const keys=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+  let body=keys.length===0?'<p class="dim" style="text-align:center;padding:40px 0">Pas encore de session.</p>':
+    keys.map(k=>`<div class="dayh">${k}</div>${byDate[k].map(l=>`<div class="log"><span>${l.label}</span><span class="p">+${l.points}</span></div>`).join('')}`).join('');
+  document.getElementById('app').innerHTML=`<button class="back" onclick="goHome()">‹ Retour</button>
+  <div class="header"><div><div class="kicker">Historique</div><h1>Progression</h1></div></div>
+  <p class="dim" style="margin-bottom:16px">🔥 ${profile.streak||0} jour(s) de suite · record ${profile.longest||0}</p>${body}`;
+}
+
+(async function(){profile=await loadP();renderHome();})();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js').catch(()=>{}));}
+</script></body></html>
